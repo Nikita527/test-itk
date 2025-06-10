@@ -337,3 +337,5 @@ dump.rdb
 .env
 .venv
 envu
+
+.ruff_cache/

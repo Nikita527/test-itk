@@ -339,3 +339,5 @@ dump.rdb
 envu
 
 .ruff_cache/
+
+results.json

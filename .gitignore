@@ -341,3 +341,4 @@ envu
 .ruff_cache/
 
 results.json
+urls.txt

@@ -2,16 +2,20 @@ import asyncio
 import aiofiles
 import aiohttp
 import json
-from typing import Dict, List
+from typing import Dict
 
 
-async def _producer(url_queue: asyncio.Queue, urls: List[str]):
+async def _producer(url_queue: asyncio.Queue, url_file: str):
     """
-    Принимает очередь и список URL.
+    Принимает файл с URL.
 
-    Заполняет очередь URL."""
-    for url in urls:
-        await url_queue.put(url)
+    Заполняет очередь URL.
+    """
+    async with aiofiles.open(url_file, "r", encoding="utf-8") as f:
+        async for line in f:
+            url = line.strip()
+            if url:
+                await url_queue.put(url)
 
 
 async def _worker(
@@ -27,14 +31,23 @@ async def _worker(
             break
         try:
             async with session.get(
-                url, timeout=aiohttp.ClientTimeout(total=10)
+                url, timeout=aiohttp.ClientTimeout(total=60)
             ) as resp:
-                status = resp.status
+                if resp.status == 200:
+                    content_type = resp.headers.get("Content-Type", "")
+                    if "application/json" in content_type:
+                        try:
+                            data = await resp.json()
+                            line = json.dumps(
+                                {"url": url, "content": data}, ensure_ascii=False
+                            )
+                            await write_queue.put(line)
+                        except Exception as e:
+                            print(f"Failed to parse JSON for {url}: {e}")
+                    else:
+                        print(f"Content-Type is not JSON for {url}: {content_type}")
         except (aiohttp.ClientError, asyncio.TimeoutError):
-            # любые сетевые ошибки и таймауты — помечаем кодом 0
-            status = 0
-        line = json.dumps({"url": url, "status_code": status}, ensure_ascii=False)
-        await write_queue.put(line)
+            pass
         url_queue.task_done()
 
 
@@ -51,7 +64,7 @@ async def _writer(write_queue: asyncio.Queue, file_path: str):
 
 
 async def fetch_url(
-    urls: List[str], file_path: str, concurrency: int = 100
+    url_file: str, file_path: str, concurrency: int = 5
 ) -> Dict[str, int]:
     """
     Принимает список URL и путь к файлу.
@@ -71,7 +84,7 @@ async def fetch_url(
             asyncio.create_task(_worker(url_queue, session, write_queue))
             for _ in range(concurrency)
         ]
-        await _producer(url_queue, urls)
+        await _producer(url_queue, url_file)
         for _ in workers:
             await url_queue.put(None)
         await url_queue.join()
@@ -82,12 +95,4 @@ async def fetch_url(
 
 
 if __name__ == "__main__":
-    urls = [
-        "https://ya.ru",
-        "https://google.com",
-        "https://yandex.ru",
-        "https://example.com",
-        "https://httpbin.org/status/404",
-        "https://nonexistent.url",
-    ]
-    asyncio.run(fetch_url(urls, "./results.json"))
+    asyncio.run(fetch_url("./urls.txt", "./results.json"))

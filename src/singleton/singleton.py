@@ -1,5 +1,4 @@
 class SingletonMeta(type):
-
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -13,7 +12,6 @@ class SingletonWithMeta(metaclass=SingletonMeta):
 
 
 class SingletonWithNew:
-
     _instances = None
 
     def __new__(cls, *args, **kwargs):

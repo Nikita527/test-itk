@@ -33,7 +33,9 @@ async def _worker(
         except (aiohttp.ClientError, asyncio.TimeoutError):
             # любые сетевые ошибки и таймауты — помечаем кодом 0
             status = 0
-        line = json.dumps({"url": url, "status_code": status}, ensure_ascii=False)
+        line = json.dumps(
+            {"url": url, "status_code": status}, ensure_ascii=False
+        )
         await write_queue.put(line)
         url_queue.task_done()
 
@@ -50,7 +52,7 @@ async def _writer(write_queue: asyncio.Queue, file_path: str):
             write_queue.task_done()
 
 
-async def fetch_url(
+async def fetch_urls(
     urls: List[str], file_path: str, concurrency: int = 100
 ) -> Dict[str, int]:
     """
@@ -90,4 +92,4 @@ if __name__ == "__main__":
         "https://httpbin.org/status/404",
         "https://nonexistent.url",
     ]
-    asyncio.run(fetch_url(urls, "./results.json"))
+    asyncio.run(fetch_urls(urls, "./results.json"))

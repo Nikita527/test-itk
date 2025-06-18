@@ -39,13 +39,17 @@ async def _worker(
                         try:
                             data = await resp.json()
                             line = json.dumps(
-                                {"url": url, "content": data}, ensure_ascii=False
+                                {"url": url, "content": data},
+                                ensure_ascii=False
                             )
                             await write_queue.put(line)
                         except Exception as e:
                             print(f"Failed to parse JSON for {url}: {e}")
                     else:
-                        print(f"Content-Type is not JSON for {url}: {content_type}")
+                        print(
+                            f"Content-Type is not JSON for {url}: "
+                            f"{content_type}"
+                        )
         except (aiohttp.ClientError, asyncio.TimeoutError):
             pass
         url_queue.task_done()
@@ -53,7 +57,7 @@ async def _worker(
 
 async def _writer(write_queue: asyncio.Queue, file_path: str):
     """Пишет результаты в файл."""
-    async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
+    async with aiofiles.open(file_path, "a", encoding="utf-8") as f:
         while True:
             line = await write_queue.get()
             if line is None:
@@ -63,7 +67,7 @@ async def _writer(write_queue: asyncio.Queue, file_path: str):
             write_queue.task_done()
 
 
-async def fetch_url(
+async def fetch_urls(
     url_file: str, file_path: str, concurrency: int = 5
 ) -> Dict[str, int]:
     """
@@ -95,4 +99,4 @@ async def fetch_url(
 
 
 if __name__ == "__main__":
-    asyncio.run(fetch_url("./urls.txt", "./results.json"))
+    asyncio.run(fetch_urls("./urls.txt", "./results.jsonl"))

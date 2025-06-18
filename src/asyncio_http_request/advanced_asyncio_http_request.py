@@ -37,7 +37,7 @@ async def _worker(
                     content_type = resp.headers.get("Content-Type", "")
                     if "application/json" in content_type:
                         try:
-                            data = await resp.json()
+                            data = await resp.text()
                             line = json.dumps(
                                 {"url": url, "content": data},
                                 ensure_ascii=False

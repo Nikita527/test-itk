@@ -2,17 +2,8 @@ import asyncio
 import aiofiles
 import aiohttp
 import json
+import ijson
 from typing import Dict
-from concurrent.futures import ThreadPoolExecutor
-
-
-def parse_json_sync(data):
-    """
-    Принимает строку JSON.
-
-    Возвращает словарь.
-    """
-    return json.loads(data)
 
 
 async def _producer(url_queue: asyncio.Queue, url_file: str):
@@ -47,17 +38,15 @@ async def _worker(
                     content_type = resp.headers.get("Content-Type", "")
                     if "application/json" in content_type:
                         try:
-                            raw = await resp.read()
-                            loop = asyncio.get_running_loop()
-                            with ThreadPoolExecutor() as executor:
-                                data = await loop.run_in_executor(
-                                    executor, parse_json_sync, raw
+                            async for obj in ijson.items_async(
+                                resp.content, ""
+                            ):
+                                line = json.dumps(
+                                    {"url": url, "content": obj},
+                                    ensure_ascii=False
                                 )
-                            line = json.dumps(
-                                {"url": url, "content": data},
-                                ensure_ascii=False
-                            )
-                            await write_queue.put(line)
+                                await write_queue.put(line)
+                                break
                         except Exception as e:
                             print(f"Failed to parse JSON for {url}: {e}")
                     else:
@@ -114,4 +103,4 @@ async def fetch_urls(
 
 
 if __name__ == "__main__":
-    asyncio.run(fetch_urls("./urls.txt", "./results.jsonl"))
+    asyncio.run(fetch_urls("./urls.txt", "./results1.jsonl"))

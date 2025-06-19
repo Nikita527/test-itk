@@ -1,6 +1,5 @@
-import time
 import multiprocessing
-
+import time
 
 from base import generate_data, process_number
 from save_file import save_data_to_json
@@ -26,7 +25,9 @@ if __name__ == "__main__":
     processes = []
     start = time.time()
     for _ in range(num_workers):
-        p = multiprocessing.Process(target=worker, args=(input_queue, output_queue))
+        p = multiprocessing.Process(
+            target=worker, args=(input_queue, output_queue)
+        )
         p.start()
         processes.append(p)
 
@@ -44,5 +45,8 @@ if __name__ == "__main__":
         p.join()
     elapsed = time.time() - start
 
-    print(f"Время выполнения (multiprocessing.Process + Queue): {elapsed:.2f} сек")
+    print(
+        f"Время выполнения (multiprocessing.Process + Queue): "
+        f"{elapsed:.2f} сек"
+    )
     save_data_to_json("result_parallel_processing_C.json", results)

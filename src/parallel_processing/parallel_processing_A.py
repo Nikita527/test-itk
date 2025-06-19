@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from base import generate_data, process_number
 from save_file import save_data_to_json
 
-
 if "__main__" == __name__:
     n = int(input("Введите число для генерации: "))
     data = generate_data(n)

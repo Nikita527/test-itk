@@ -1,9 +1,10 @@
 import asyncio
+import json
+from typing import Dict
+
 import aiofiles
 import aiohttp
-import json
 import ijson
-from typing import Dict
 
 
 async def _producer(url_queue: asyncio.Queue, url_file: str):
@@ -38,16 +39,21 @@ async def _worker(
                     content_type = resp.headers.get("Content-Type", "")
                     if "application/json" in content_type:
                         try:
-                            async for obj in ijson.items_async(resp.content, ""):
+                            async for obj in ijson.items_async(
+                                resp.content, ""
+                            ):
                                 line = json.dumps(
-                                    {"url": url, "content": obj}, ensure_ascii=False
+                                    {"url": url, "content": obj},
+                                    ensure_ascii=False,
                                 )
                                 await write_queue.put(line)
                                 break
                         except Exception as e:
                             print(f"Failed to parse JSON for {url}: {e}")
                     else:
-                        print(f"Content-Type is not JSON for {url}: {content_type}")
+                        print(
+                            f"Content-Type is not JSON for {url}: {content_type}"
+                        )
         except (aiohttp.ClientError, asyncio.TimeoutError):
             pass
         url_queue.task_done()

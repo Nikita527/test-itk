@@ -1,8 +1,9 @@
 import asyncio
-import aiofiles
-import aiohttp
 import json
 from typing import Dict, List
+
+import aiofiles
+import aiohttp
 
 
 async def _producer(url_queue: asyncio.Queue, urls: List[str]):

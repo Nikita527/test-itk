@@ -9,17 +9,21 @@ async def app(scope, receive, send):
 
     path = scope.get("path", "/")
     if not path.startswith("/") or len(path) < 2:
-        await send({
-            "type": "http.response.start",
-            "status": 404,
-            "headers": [
-                [b"content-type", b"application/json"],
-            ],
-        })
-        await send({
-            "type": "http.response.body",
-            "body": b'{"error": "Currency not specified"}',
-        })
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 404,
+                "headers": [
+                    [b"content-type", b"application/json"],
+                ],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": b'{"error": "Currency not specified"}',
+            }
+        )
         return
 
     currency = path[1:].upper()
@@ -30,38 +34,50 @@ async def app(scope, receive, send):
             response = await session.get(url)
             if response.status == 200:
                 data = await response.read()
-                await send({
-                    "type": "http.response.start",
-                    "status": 200,
-                    "headers": [
-                        [b"content-type", b"application/json"],
-                    ],
-                })
-                await send({
-                    "type": "http.response.body",
-                    "body": data,
-                })
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [
+                            [b"content-type", b"application/json"],
+                        ],
+                    }
+                )
+                await send(
+                    {
+                        "type": "http.response.body",
+                        "body": data,
+                    }
+                )
             else:
-                await send({
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 404,
+                        "headers": [
+                            [b"content-type", b"application/json"],
+                        ],
+                    }
+                )
+                await send(
+                    {
+                        "type": "http.response.body",
+                        "body": b'{"error": "Currency not found"}',
+                    }
+                )
+        except aiohttp.ClientError:
+            await send(
+                {
                     "type": "http.response.start",
-                    "status": 404,
+                    "status": 502,
                     "headers": [
                         [b"content-type", b"application/json"],
                     ],
-                })
-                await send({
+                }
+            )
+            await send(
+                {
                     "type": "http.response.body",
-                    "body": b'{"error": "Currency not found"}',
-                })
-        except aiohttp.ClientError:
-            await send({
-                "type": "http.response.start",
-                "status": 502,
-                "headers": [
-                    [b"content-type", b"application/json"],
-                ],
-            })
-            await send({
-                "type": "http.response.body",
-                "body": b'{"error": "Upstream error"}',
-            })
+                    "body": b'{"error": "Upstream error"}',
+                }
+            )

@@ -54,17 +54,13 @@ async def _worker(
                                     executor, parse_json_sync, raw
                                 )
                             line = json.dumps(
-                                {"url": url, "content": data},
-                                ensure_ascii=False
+                                {"url": url, "content": data}, ensure_ascii=False
                             )
                             await write_queue.put(line)
                         except Exception as e:
                             print(f"Failed to parse JSON for {url}: {e}")
                     else:
-                        print(
-                            f"Content-Type is not JSON for {url}: "
-                            f"{content_type}"
-                        )
+                        print(f"Content-Type is not JSON for {url}: {content_type}")
         except (aiohttp.ClientError, asyncio.TimeoutError):
             pass
         url_queue.task_done()

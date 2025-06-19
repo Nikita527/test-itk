@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "aiofiles>=24.1.0",
     "aiohttp>=3.12.13",
+    "django>=5.2.3",
     "ijson>=3.4.0",
     "ruff>=0.11.13",
     "uvicorn>=0.34.3",
@@ -18,3 +19,4 @@ extend-select = ["I"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+line-length = 79

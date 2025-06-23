@@ -1,10 +1,14 @@
 import asyncio
 import json
-from concurrent.futures import ThreadPoolExecutor
+import os
+from concurrent.futures import ProcessPoolExecutor
 from typing import Dict
 
 import aiofiles
 import aiohttp
+
+cpu_count = os.cpu_count() or 1
+pool = ProcessPoolExecutor(max_workers=cpu_count)
 
 
 def parse_json_sync(data):
@@ -50,10 +54,9 @@ async def _worker(
                         try:
                             raw = await resp.read()
                             loop = asyncio.get_running_loop()
-                            with ThreadPoolExecutor() as executor:
-                                data = await loop.run_in_executor(
-                                    executor, parse_json_sync, raw
-                                )
+                            data = await loop.run_in_executor(
+                                pool, parse_json_sync, raw
+                            )
                             line = json.dumps(
                                 {"url": url, "content": data},
                                 ensure_ascii=False,
@@ -63,7 +66,8 @@ async def _worker(
                             print(f"Failed to parse JSON for {url}: {e}")
                     else:
                         print(
-                            f"Content-Type is not JSON for {url}: {content_type}"
+                            f"Content-Type is not "
+                            f"JSON for {url}: {content_type}"
                         )
         except (aiohttp.ClientError, asyncio.TimeoutError):
             pass
@@ -115,3 +119,4 @@ async def fetch_urls(
 
 if __name__ == "__main__":
     asyncio.run(fetch_urls("./urls.txt", "./results.jsonl"))
+    pool.shutdown(wait=True)

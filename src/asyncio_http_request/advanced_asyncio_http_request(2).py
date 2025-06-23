@@ -52,7 +52,8 @@ async def _worker(
                             print(f"Failed to parse JSON for {url}: {e}")
                     else:
                         print(
-                            f"Content-Type is not JSON for {url}: {content_type}"
+                            f"Content-Type is not "
+                            f"JSON for {url}: {content_type}"
                         )
         except (aiohttp.ClientError, asyncio.TimeoutError):
             pass

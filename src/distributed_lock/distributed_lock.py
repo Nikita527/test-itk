@@ -32,7 +32,7 @@ def single(max_processing_time: datetime.timedelta):
             try:
                 return func(*args, **kwargs)
             finally:
-                redis_client.delete(RELEASE_LUA, 1, lock_key, token)
+                redis_client.eval(RELEASE_LUA, 1, lock_key, token)
 
         return wrapper
 
